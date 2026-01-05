@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tanstack-start-app",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    "ENVIRONMENT": "production",
+  },
+  "env": {
+    "local": {
+      "name": "tanstack-start-app-local",
+      "vars": {
+        "ENVIRONMENT": "local",
+      },
+    },
+    "develop": {
+      "name": "tanstack-start-app-develop",
+      "vars": {
+        "ENVIRONMENT": "develop",
+      },
+    },
+    "staging": {
+      "name": "tanstack-start-app-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+      },
+    },
+  },
+}

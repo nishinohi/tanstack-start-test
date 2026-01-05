@@ -293,6 +293,36 @@ Once we've created the derived store we can use it in the `App` component just l
 
 You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
 
+# Deployment
+
+This project is configured to deploy to Cloudflare Workers.
+
+## Automatic Deployment via GitHub Actions
+
+Automatic deployment is triggered on push to:
+
+- **main** branch → Production environment
+- **staging** branch → Staging environment
+- **develop** branch → Develop environment
+
+### Required GitHub Secrets
+
+Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+
+1. **CLOUDFLARE_API_TOKEN**: Generate at Cloudflare Dashboard → My Profile → API Tokens
+   - Use "Edit Cloudflare Workers" template
+   - Or create custom token with: `Workers Scripts:Edit`, `Workers Routes:Edit`
+
+2. **CLOUDFLARE_ACCOUNT_ID**: Find at Cloudflare Dashboard → Workers & Pages → Overview
+
+## Manual Deployment
+
+```bash
+pnpm deploy          # Deploy to production
+pnpm deploy:dev      # Deploy to develop environment
+pnpm deploy:staging  # Deploy to staging environment
+```
+
 # Demo files
 
 Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.

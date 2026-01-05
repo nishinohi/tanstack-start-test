@@ -1,0 +1,28 @@
+# Lefthook configuration for TanStack Start project
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  skip:
+    - merge
+    - rebase
+  commands:
+    prettier:
+      glob: '*.{js,jsx,ts,tsx,json,css,md}'
+      exclude: 'src/routeTree.gen.ts'
+      run: pnpm prettier --write {staged_files}
+      stage_fixed: true
+      priority: 1
+
+    eslint:
+      glob: '*.{js,jsx,ts,tsx}'
+      exclude: 'eslint.config.js|vite.config.ts|src/routeTree.gen.ts'
+      run: pnpm eslint --fix {staged_files}
+      stage_fixed: true
+      priority: 2
+
+    stylelint:
+      glob: '*.css'
+      run: pnpm stylelint --fix {staged_files}
+      stage_fixed: true
+      priority: 2

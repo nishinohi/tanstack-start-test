@@ -1,0 +1,6 @@
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.claude/*
+worker-configuration.d.ts
+routeTree.gen.ts
