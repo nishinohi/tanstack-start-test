@@ -1,0 +1,64 @@
+version: 2
+updates:
+  # npm dependencies (pnpm uses npm ecosystem)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Tokyo'
+    open-pull-requests-limit: 10
+    groups:
+      # Group TanStack packages together
+      tanstack:
+        patterns:
+          - '@tanstack/*'
+      # Group React packages together
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+      # Group dev tools together
+      dev-tools:
+        patterns:
+          - 'eslint*'
+          - 'prettier*'
+          - 'stylelint*'
+          - 'vitest'
+          - '@testing-library/*'
+      # Group Vite and plugins together
+      vite:
+        patterns:
+          - 'vite'
+          - '@vitejs/*'
+          - 'vite-*'
+      # Group Tailwind CSS packages together
+      tailwind:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'tailwind-*'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Tokyo'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
+    commit-message:
+      prefix: 'ci'
