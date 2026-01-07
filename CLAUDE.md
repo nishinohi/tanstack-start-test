@@ -276,6 +276,12 @@ Automatic deployment is configured via `.github/workflows/deploy.yml`:
 2. Get Account ID: Cloudflare Dashboard → Workers & Pages → Overview (right sidebar)
 3. Add secrets to GitHub: Repository Settings → Secrets and variables → Actions → New repository secret
 
+**Notes:**
+
+- The workflow uses `pnpm/action-setup@v4` without specifying a version, which automatically uses the version defined in package.json's `packageManager` field (pnpm@10.27.0)
+- Node.js version is set to 24.11 to match the `engines` field in package.json
+- This ensures consistency between local development and CI/CD environments
+
 ## Vite Plugins
 
 The following Vite plugins are configured (in order):
