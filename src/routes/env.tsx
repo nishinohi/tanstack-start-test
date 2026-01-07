@@ -5,7 +5,11 @@ import { env } from 'cloudflare:workers'
 // Server function to get Cloudflare environment variables
 const getEnvVars = createServerFn({ method: 'GET' }).handler(() => {
   return {
-    environment: env,
+    // シリアライズ可能なプロパティのみを抽出
+    environment: {
+      ENVIRONMENT: env.ENVIRONMENT,
+      // 他に必要な環境変数があればここに追加
+    },
     // Vite環境変数（ビルド時）
     viteMode: import.meta.env.MODE || 'unknown',
     viteDev: import.meta.env.DEV,

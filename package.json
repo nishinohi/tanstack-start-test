@@ -12,12 +12,26 @@
     "lint": "eslint",
     "format": "prettier",
     "check": "prettier --write . && eslint --fix",
-    "deploy": "npm run build && wrangler deploy",
-    "deploy:develop": "CLOUDFLARE_ENV=develop npm run build && wrangler deploy --env develop",
-    "deploy:staging": "CLOUDFLARE_ENV=staging npm run build && wrangler deploy --env staging"
+    "db:generate": "drizzle-kit generate --config ./src/db/config/drizzle-local.config.ts",
+    "db:migrate:local": "drizzle-kit migrate --config ./src/db/config/drizzle-local.config.ts",
+    "db:migrate:start": "drizzle-kit migrate --config ./src/db/config/drizzle-start.config.ts",
+    "db:migrate:dev": "drizzle-kit migrate --config ./src/db/config/drizzle-dev.config.ts",
+    "db:migrate:stg": "drizzle-kit migrate --config ./src/db/config/drizzle-stg.config.ts",
+    "db:migrate:prod": "drizzle-kit migrate --config ./src/db/config/drizzle-prod.config.ts",
+    "db:view:local": "drizzle-kit studio --config ./src/db/config/drizzle-local.config.ts",
+    "db:view:start": "drizzle-kit studio --config ./src/db/config/drizzle-start.config.ts",
+    "db:view:dev": "drizzle-kit studio --config ./src/db/config/drizzle-dev.config.ts",
+    "db:view:stg": "drizzle-kit studio --config ./src/db/config/drizzle-stg.config.ts",
+    "db:view:prod": "drizzle-kit studio --config ./src/db/config/drizzle-prod.config.ts",
+    "db:drop:local": "wrangler d1 execute tanstack-test-local --env local --local --file='./src/db/seed/drop-all-table.sql' --config=./wrangler.jsonc",
+    "db:drop:start": "wrangler d1 execute tanstack-test-start --env start --local --file='./src/db/seed/drop-all-table.sql' --config=./wrangler.jsonc",
+    "db:drop:dev": "wrangler d1 execute tanstack-test-develop --env develop --remote --file='./src/db/seed/drop-all-table.sql' --config=./wrangler.jsonc",
+    "db:drop:stg": "wrangler d1 execute tanstack-test-staging --env staging --remote --file='./src/db/seed/drop-all-table.sql' --config=./wrangler.jsonc",
+    "db:drop:prod": "echo \"🔥 Be careful 🔥\\nYou can delete all tables by executing:\\n> wrangler d1 execute tanstack-test --remote --file='./src/db/seed/drop-all-table.sql' --config=./wrangler.jsonc\""
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.17.1",
+    "@libsql/client": "^0.15.15",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "^0.9.1",
     "@tanstack/react-query": "^5.90.16",
@@ -72,7 +86,7 @@
     "wrangler": "^4.54.0"
   },
   "engines": {
-    "node": "24.12.x"
+    "node": "24.11.x"
   },
   "packageManager": "pnpm@10.27.0+sha512.72d699da16b1179c14ba9e64dc71c9a40988cbdc65c264cb0e489db7de917f20dcf4d64d8723625f2969ba52d4b7e2a1170682d9ac2a5dcaeaab732b7e16f04a"
 }

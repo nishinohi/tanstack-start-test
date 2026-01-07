@@ -7,24 +7,52 @@
   "vars": {
     "ENVIRONMENT": "production",
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tanstack-test",
+      "database_id": "0cd87efb-73d1-40cc-ad97-39076ef58dac",
+    },
+  ],
   "env": {
     "local": {
       "name": "tanstack-start-app-local",
       "vars": {
         "ENVIRONMENT": "local",
       },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tanstack-test-local",
+          "database_id": "0cd87efb-73d1-40cc-ad97-39076ef58dac",
+        },
+      ],
     },
     "develop": {
       "name": "tanstack-start-app-develop",
       "vars": {
         "ENVIRONMENT": "develop",
       },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tanstack-test-develop",
+          "database_id": "4036bdf9-7638-4686-a8b9-166b357284dd",
+        },
+      ],
     },
     "staging": {
       "name": "tanstack-start-app-staging",
       "vars": {
         "ENVIRONMENT": "staging",
       },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "tanstack-test-staging",
+          "database_id": "eb2ef97c-5e2c-4527-86a1-267ad97d9c25",
+        },
+      ],
     },
   },
 }

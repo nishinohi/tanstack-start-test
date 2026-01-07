@@ -1,0 +1,13 @@
+DROP TABLE IF EXISTS 'user';
+DROP TABLE IF EXISTS 'session';
+DROP TABLE IF EXISTS 'account';
+DROP TABLE IF EXISTS 'verification';
+DROP TABLE IF EXISTS 'page_sections';
+DROP TABLE IF EXISTS 'pages';
+DROP TABLE IF EXISTS 'site_settings';
+DROP TABLE IF EXISTS 'sites';
+DROP TABLE IF EXISTS 'site_datas';
+DROP TABLE IF EXISTS 'application_forms';
+DROP TABLE IF EXISTS 'application_form_notifications';
+DROP TABLE IF EXISTS 'applications';
+DROP TABLE IF EXISTS 'todos';
