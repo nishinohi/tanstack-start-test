@@ -3,13 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
-import { env } from 'cloudflare:workers'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { NewTodo } from '@/db/schema/schema'
 import { todos } from '@/db/schema/schema'
+import { getDb } from '@/db/client'
 
 // Zod スキーマ定義
 const todoFormSchema = z.object({
@@ -40,7 +39,7 @@ export const Route = createFileRoute('/db-test')({
 
 // すべてのTodoを取得
 export const getAllTodos = createServerFn({ method: 'GET' }).handler(async () => {
-  const db = drizzle(env.DB)
+  const db = getDb()
   const allTodos = await db.select().from(todos).all()
   return allTodos
 })
@@ -49,7 +48,7 @@ export const getAllTodos = createServerFn({ method: 'GET' }).handler(async () =>
 export const createTodo = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => createTodoSchema.parse(input))
   .handler(async ({ data }) => {
-    const db = drizzle(env.DB)
+    const db = getDb()
     const result = await db
       .insert(todos)
       .values({
@@ -64,7 +63,7 @@ export const createTodo = createServerFn({ method: 'POST' })
 export const updateTodo = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => updateTodoSchema.parse(input))
   .handler(async ({ data }) => {
-    const db = drizzle(env.DB)
+    const db = getDb()
     const updateData: Partial<NewTodo> = {}
     if (data.title !== undefined) updateData.title = data.title
     if (data.completed !== undefined) updateData.completed = data.completed
@@ -77,7 +76,7 @@ export const updateTodo = createServerFn({ method: 'POST' })
 export const deleteTodo = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => deleteTodoSchema.parse(input))
   .handler(async ({ data }) => {
-    const db = drizzle(env.DB)
+    const db = getDb()
     await db.delete(todos).where(eq(todos.id, data.id))
     return { success: true }
   })
