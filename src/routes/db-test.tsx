@@ -5,8 +5,34 @@ import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { env } from 'cloudflare:workers'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import type { NewTodo } from '@/db/schema/schema'
 import { todos } from '@/db/schema/schema'
+
+// Zod スキーマ定義
+const todoFormSchema = z.object({
+  title: z.string().min(1, 'タイトルを入力してください').max(100, 'タイトルは100文字以内で入力してください'),
+})
+
+type TodoFormData = z.infer<typeof todoFormSchema>
+
+// Server function用のZodスキーマ
+const createTodoSchema = z.object({
+  title: z.string().min(1).max(100),
+  completed: z.boolean().optional(),
+})
+
+const updateTodoSchema = z.object({
+  id: z.number().int().positive(),
+  title: z.string().min(1).max(100).optional(),
+  completed: z.boolean().optional(),
+})
+
+const deleteTodoSchema = z.object({
+  id: z.number().int().positive(),
+})
 
 export const Route = createFileRoute('/db-test')({
   component: DBTestPage,
@@ -21,7 +47,7 @@ export const getAllTodos = createServerFn({ method: 'GET' }).handler(async () =>
 
 // 新しいTodoを作成
 export const createTodo = createServerFn({ method: 'POST' })
-  .inputValidator((input: NewTodo) => input)
+  .inputValidator((input: unknown) => createTodoSchema.parse(input))
   .handler(async ({ data }) => {
     const db = drizzle(env.DB)
     const result = await db
@@ -36,7 +62,7 @@ export const createTodo = createServerFn({ method: 'POST' })
 
 // Todoを更新
 export const updateTodo = createServerFn({ method: 'POST' })
-  .inputValidator((input: { id: number; title?: string; completed?: boolean }) => input)
+  .inputValidator((input: unknown) => updateTodoSchema.parse(input))
   .handler(async ({ data }) => {
     const db = drizzle(env.DB)
     const updateData: Partial<NewTodo> = {}
@@ -49,7 +75,7 @@ export const updateTodo = createServerFn({ method: 'POST' })
 
 // Todoを削除
 export const deleteTodo = createServerFn({ method: 'POST' })
-  .inputValidator((input: { id: number }) => input)
+  .inputValidator((input: unknown) => deleteTodoSchema.parse(input))
   .handler(async ({ data }) => {
     const db = drizzle(env.DB)
     await db.delete(todos).where(eq(todos.id, data.id))
@@ -58,12 +84,26 @@ export const deleteTodo = createServerFn({ method: 'POST' })
 
 function DBTestPage() {
   const queryClient = useQueryClient()
-  const [newTodoTitle, setNewTodoTitle] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editingTitle, setEditingTitle] = useState('')
+
+  // 新規作成フォーム
+  const createForm = useForm<TodoFormData>({
+    resolver: zodResolver(todoFormSchema),
+    defaultValues: {
+      title: '',
+    },
+  })
+
+  // 編集フォーム
+  const editForm = useForm<TodoFormData>({
+    resolver: zodResolver(todoFormSchema),
+    defaultValues: {
+      title: '',
+    },
+  })
 
   // Todosを取得
-  const { data: todos = [], isLoading } = useQuery({
+  const { data: todoList = [], isLoading } = useQuery({
     queryKey: ['todos'],
     queryFn: () => getAllTodos(),
   })
@@ -73,7 +113,7 @@ function DBTestPage() {
     mutationFn: (input: { title: string }) => createTodo({ data: input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] })
-      setNewTodoTitle('')
+      createForm.reset()
     },
   })
 
@@ -83,7 +123,7 @@ function DBTestPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos'] })
       setEditingId(null)
-      setEditingTitle('')
+      editForm.reset()
     },
   })
 
@@ -95,17 +135,12 @@ function DBTestPage() {
     },
   })
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newTodoTitle.trim()) {
-      createMutation.mutate({ title: newTodoTitle.trim() })
-    }
+  const handleCreate = (data: TodoFormData) => {
+    createMutation.mutate({ title: data.title })
   }
 
-  const handleUpdate = (id: number) => {
-    if (editingTitle.trim()) {
-      updateMutation.mutate({ id, title: editingTitle.trim() })
-    }
+  const handleUpdate = (id: number, data: TodoFormData) => {
+    updateMutation.mutate({ id, title: data.title })
   }
 
   const handleToggleComplete = (id: number, completed: boolean) => {
@@ -120,12 +155,12 @@ function DBTestPage() {
 
   const startEdit = (id: number, title: string) => {
     setEditingId(id)
-    setEditingTitle(title)
+    editForm.reset({ title })
   }
 
   const cancelEdit = () => {
     setEditingId(null)
-    setEditingTitle('')
+    editForm.reset()
   }
 
   if (isLoading) {
@@ -143,32 +178,36 @@ function DBTestPage() {
       {/* 新規作成フォーム */}
       <div className="mb-8 rounded-lg border border-gray-300 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-semibold">新しいTodoを作成</h2>
-        <form onSubmit={handleCreate} className="flex gap-2">
-          <input
-            type="text"
-            value={newTodoTitle}
-            onChange={(e) => setNewTodoTitle(e.target.value)}
-            placeholder="Todoのタイトルを入力..."
-            className="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={createMutation.isPending || !newTodoTitle.trim()}
-            className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            {createMutation.isPending ? '作成中...' : '作成'}
-          </button>
+        <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              {...createForm.register('title')}
+              placeholder="Todoのタイトルを入力..."
+              className="flex-1 rounded border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {createMutation.isPending ? '作成中...' : '作成'}
+            </button>
+          </div>
+          {createForm.formState.errors.title && (
+            <p className="text-sm text-red-500">{createForm.formState.errors.title.message}</p>
+          )}
         </form>
       </div>
 
       {/* Todoリスト */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Todoリスト ({todos.length}件)</h2>
-        {todos.length === 0 ? (
+        <h2 className="text-xl font-semibold">Todoリスト ({todoList.length}件)</h2>
+        {todoList.length === 0 ? (
           <p className="py-8 text-center text-gray-500">Todoがありません。上のフォームから作成してください。</p>
         ) : (
           <div className="space-y-2">
-            {todos.map((todo) => (
+            {todoList.map((todo) => (
               <div
                 key={todo.id}
                 className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
@@ -183,13 +222,17 @@ function DBTestPage() {
 
                 {/* タイトル表示/編集 */}
                 {editingId === todo.id ? (
-                  <input
-                    type="text"
-                    value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
-                    className="flex-1 rounded border border-gray-300 px-3 py-1 focus:border-blue-500 focus:outline-none"
-                    autoFocus
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      {...editForm.register('title')}
+                      className="w-full rounded border border-gray-300 px-3 py-1 focus:border-blue-500 focus:outline-none"
+                      autoFocus
+                    />
+                    {editForm.formState.errors.title && (
+                      <p className="mt-1 text-xs text-red-500">{editForm.formState.errors.title.message}</p>
+                    )}
+                  </div>
                 ) : (
                   <span className={`flex-1 ${todo.completed ? 'text-gray-400 line-through' : ''}`}>{todo.title}</span>
                 )}
@@ -199,7 +242,7 @@ function DBTestPage() {
                   {editingId === todo.id ? (
                     <>
                       <button
-                        onClick={() => handleUpdate(todo.id)}
+                        onClick={editForm.handleSubmit((data) => handleUpdate(todo.id, data))}
                         disabled={updateMutation.isPending}
                         className="rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600 disabled:bg-gray-300"
                       >
@@ -239,7 +282,7 @@ function DBTestPage() {
       {/* デバッグ情報 */}
       <div className="mt-8 rounded-lg border border-gray-300 bg-gray-50 p-4">
         <h3 className="mb-2 font-semibold">データベース情報</h3>
-        <pre className="overflow-auto text-xs">{JSON.stringify(todos, null, 2)}</pre>
+        <pre className="overflow-auto text-xs">{JSON.stringify(todoList, null, 2)}</pre>
       </div>
     </div>
   )
