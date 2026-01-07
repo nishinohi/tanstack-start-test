@@ -13,6 +13,8 @@ This is a **TanStack Start** application with the following key technologies:
 - **Tailwind CSS v4**: Utility-first CSS framework
 - **Vite**: Build tool and dev server
 - **Cloudflare**: Deployment target (via Wrangler)
+- **Cloudflare D1**: SQLite database for serverless applications
+- **Drizzle ORM**: TypeScript ORM for database operations
 - **Shadcn/ui**: UI component library (New York style)
 
 ## Common Commands
@@ -57,6 +59,24 @@ pnpm typegen:cf
 
 # Add Shadcn components
 pnpm dlx shadcn@latest add <component-name>
+
+# Database commands (Drizzle ORM with Cloudflare D1)
+pnpm db:generate              # Generate migration files from schema
+pnpm db:migrate:local         # Run migrations (local D1)
+pnpm db:migrate:start         # Run migrations (start environment)
+pnpm db:migrate:dev           # Run migrations (develop environment, remote)
+pnpm db:migrate:stg           # Run migrations (staging environment, remote)
+pnpm db:migrate:prod          # Run migrations (production environment, remote)
+pnpm db:view:local            # Open Drizzle Studio (local)
+pnpm db:view:start            # Open Drizzle Studio (start environment)
+pnpm db:view:dev              # Open Drizzle Studio (develop environment)
+pnpm db:view:stg              # Open Drizzle Studio (staging environment)
+pnpm db:view:prod             # Open Drizzle Studio (production environment)
+pnpm db:drop:local            # Drop all tables (local, uses local flag)
+pnpm db:drop:start            # Drop all tables (start environment, uses local flag)
+pnpm db:drop:dev              # Drop all tables (develop environment, remote)
+pnpm db:drop:stg              # Drop all tables (staging environment, remote)
+pnpm db:drop:prod             # Warning message only - must execute manually
 ```
 
 ## Architecture
@@ -94,6 +114,39 @@ Server functions are created using `createServerFn()` from `@tanstack/react-star
 - They can be called from client components
 - Used in route loaders for SSR data fetching
 - See `src/routes/demo/start.server-funcs.tsx` for examples
+- Server functions for database operations are typically placed in `src/server/` directory
+
+### Database Layer (Drizzle ORM + Cloudflare D1)
+
+The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
+
+- **Schema definition**: `src/db/schema/` - Define database tables using Drizzle's schema syntax
+  - Export type inference using `typeof tableName.$inferSelect` and `typeof tableName.$inferInsert`
+- **Migration files**: `migrations/` - Auto-generated SQL migration files (committed to git)
+- **Drizzle configuration**: `src/db/config/drizzle-*.config.ts` - Environment-specific configs for each deployment environment
+  - Each config uses `loadD1Credentials()` from `src/db/lib/drizzle-config-loader.ts`
+- **Server functions**: Database operations are exposed via server functions in `src/server/`
+  - Use `drizzle(env.DB)` to get database instance (env.DB is the D1 binding from Cloudflare Workers)
+  - Import from `cloudflare:workers` to access environment bindings
+- **D1 bindings**: Configured in `wrangler.jsonc` with separate databases per environment
+
+**Environment-specific database setup:**
+
+Each environment has its own D1 database instance configured in `wrangler.jsonc`:
+
+- `local`: Local D1 instance for development
+- `develop`: Remote D1 instance for develop environment
+- `staging`: Remote D1 instance for staging environment
+- `production`: Remote D1 instance for production environment
+
+**Drizzle configuration pattern:**
+
+Drizzle configs use environment-specific credential loading:
+
+- **Local/Start environments**: Uses local SQLite file (`.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`)
+  - Requires `D1_LOCAL_URL` in `.env.local` or `.env.start`
+- **Remote environments** (develop/staging/production): Uses Cloudflare D1 API
+  - Requires `CLOUDFLARE_ACCOUNT_ID`, `D1_ID`, `CLOUDFLARE_API_TOKEN` in respective `.env.*` files
 
 ### Styling
 
@@ -255,6 +308,21 @@ const serverFn = createServerFn({ method: 'GET' }).handler(async () => {
 })
 ```
 
+### Database Operations with Drizzle
+
+```typescript
+import { drizzle } from 'drizzle-orm/d1'
+import { env } from 'cloudflare:workers'
+import { createServerFn } from '@tanstack/react-start'
+import { myTable } from '@/db/schema/schema'
+
+export const getData = createServerFn({ method: 'GET' }).handler(async () => {
+  const db = drizzle(env.DB)
+  const result = await db.select().from(myTable).all()
+  return result
+})
+```
+
 ### Router Context
 
 The router context includes the TanStack Query client. Access it in routes via:
@@ -281,6 +349,11 @@ cn('text-red-500', someCondition && 'font-bold')
 src/
 ├── components/        # React components (Shadcn/ui components in ui/)
 ├── data/             # Data files
+├── db/               # Database layer (Drizzle ORM)
+│   ├── config/       # Environment-specific Drizzle configs
+│   ├── lib/          # Database utilities (credential loader)
+│   ├── schema/       # Database schema definitions
+│   └── seed/         # Database seed files and utilities
 ├── integrations/     # Third-party integrations
 │   └── tanstack-query/
 ├── lib/              # Utility functions (utils.ts)
@@ -289,7 +362,10 @@ src/
 │   ├── index.tsx     # Home page
 │   └── demo/         # Demo files (can be deleted)
 ├── router.tsx        # Router initialization
+├── server/           # Server-side functions (database operations, etc.)
 └── styles.css        # Global styles (Tailwind CSS)
+
+migrations/           # Auto-generated database migration files
 ```
 
 ## Environment Variables
@@ -303,3 +379,23 @@ src/
   - `production` for default deployment
   - `develop` via `pnpm deploy:dev`
   - `staging` via `pnpm deploy:staging`
+
+### Database Credential Environment Variables
+
+For Drizzle migration and studio commands, create environment-specific `.env.*` files:
+
+- **Local/Start environments** (`.env.local`, `.env.start`):
+
+  ```bash
+  D1_LOCAL_URL='./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/[your_database_id].sqlite'
+  ```
+
+- **Remote environments** (`.env.develop`, `.env.staging`, `.env.production`):
+
+  ```bash
+  CLOUDFLARE_ACCOUNT_ID='your_account_id'
+  D1_ID='your_database_id'
+  CLOUDFLARE_API_TOKEN='your_api_token'
+  ```
+
+These are used by `src/db/lib/drizzle-config-loader.ts` to connect to the appropriate database for migrations and Drizzle Studio.
