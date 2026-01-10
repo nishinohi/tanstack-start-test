@@ -15,6 +15,9 @@ This is a **TanStack Start** application with the following key technologies:
 - **Cloudflare**: Deployment target (via Wrangler)
 - **Cloudflare D1**: SQLite database for serverless applications
 - **Drizzle ORM**: TypeScript ORM for database operations
+- **Better Auth**: Authentication library with Drizzle adapter
+- **React Hook Form**: Form management with validation
+- **Zod**: TypeScript-first schema validation
 - **Shadcn/ui**: UI component library (New York style)
 
 ## Common Commands
@@ -44,15 +47,11 @@ pnpm format
 # Format and lint fix (runs prettier --write + eslint --fix)
 pnpm check
 
-# Deploy to Cloudflare (manual deployment)
-pnpm deploy          # Deploy to production
-pnpm deploy:dev      # Deploy to develop environment
-pnpm deploy:staging  # Deploy to staging environment
-
-# Note: Automatic deployment via GitHub Actions is configured for:
+# Note: Deployment is handled automatically via GitHub Actions:
 # - main branch → production
 # - staging branch → staging environment
 # - develop branch → develop environment
+# Manual deployment can be done using `wrangler deploy` commands directly
 
 # Generate Cloudflare Worker types
 pnpm typegen:cf
@@ -116,6 +115,15 @@ Server functions are created using `createServerFn()` from `@tanstack/react-star
 - See `src/routes/demo/start.server-funcs.tsx` for examples
 - Server functions for database operations are typically placed in `src/server/` directory
 
+### Authentication (Better Auth)
+
+Better Auth is integrated for authentication with Drizzle adapter:
+
+- Configuration file: `auth.ts` in project root
+- Uses `better-auth/adapters/drizzle` with SQLite provider
+- Auth schema is defined in `src/db/schema/auth.ts`
+- The `auth.ts` file is a configuration file for schema generation (database instance is not required)
+
 ### Database Layer (Drizzle ORM + Cloudflare D1)
 
 The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
@@ -134,10 +142,13 @@ The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
 
 Each environment has its own D1 database instance configured in `wrangler.jsonc`:
 
-- `local`: Local D1 instance for development
+- `local`: Local D1 instance for development (via `pnpm dev`)
+- `start`: Additional local environment for testing (uses local flag)
 - `develop`: Remote D1 instance for develop environment
 - `staging`: Remote D1 instance for staging environment
 - `production`: Remote D1 instance for production environment
+
+Note: The "start" environment uses local D1 like "local" but provides a separate configuration for testing purposes.
 
 **Drizzle configuration pattern:**
 
@@ -160,6 +171,15 @@ Drizzle configs use environment-specific credential loading:
   - CSS variables enabled
   - Icon library: lucide-react
   - Component aliases: `@/components`, `@/components/ui`
+
+### Form Handling
+
+Form management uses React Hook Form with Zod validation:
+
+- **React Hook Form**: Performant, flexible form library
+- **Zod**: TypeScript-first schema validation
+- **@hookform/resolvers**: Zod integration for React Hook Form
+- See demo files for examples of form validation patterns
 
 ### DevTools
 
@@ -247,8 +267,8 @@ All hooks use `stage_fixed: true` to automatically stage fixes.
 - Four environments configured:
   - **Local**: `tanstack-start-app-local` (development via `pnpm dev`, uses `CLOUDFLARE_ENV=local`)
   - **Production**: `tanstack-start-app` (default)
-  - **Develop**: `tanstack-start-app-develop` (via `pnpm deploy:dev`)
-  - **Staging**: `tanstack-start-app-staging` (via `pnpm deploy:staging`)
+  - **Develop**: `tanstack-start-app-develop`
+  - **Staging**: `tanstack-start-app-staging`
 - Environment variables set via `vars` in `wrangler.jsonc`
 - Local environment variables should be stored in `.dev.vars` or `.env` files:
   - `.dev.vars` / `.env`: Default environment variables for local development
