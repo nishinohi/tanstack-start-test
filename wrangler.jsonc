@@ -6,6 +6,7 @@
   "main": "@tanstack/react-start/server-entry",
   "vars": {
     "ENVIRONMENT": "production",
+    "BASE_URL": "https://tanstack-start-app.tomoya0209.workers.dev",
   },
   "d1_databases": [
     {
@@ -14,11 +15,18 @@
       "database_id": "0cd87efb-73d1-40cc-ad97-39076ef58dac",
     },
   ],
+  "kv_namespaces": [
+    {
+      "binding": "SESSION_KV",
+      "id": "b80e4a6a93f14859a3a37c97120e382f",
+    },
+  ],
   "env": {
     "local": {
       "name": "tanstack-start-app-local",
       "vars": {
         "ENVIRONMENT": "local",
+        "BASE_URL": "http://localhost:3000",
       },
       "d1_databases": [
         {
@@ -27,11 +35,18 @@
           "database_id": "0cd87efb-73d1-40cc-ad97-39076ef58dac",
         },
       ],
+      "kv_namespaces": [
+        {
+          "binding": "SESSION_KV",
+          "id": "b80e4a6a93f14859a3a37c97120e382f",
+        },
+      ],
     },
     "develop": {
       "name": "tanstack-start-app-develop",
       "vars": {
         "ENVIRONMENT": "develop",
+        "BASE_URL": "https://tanstack-start-app-develop.tomoya0209.workers.dev",
       },
       "d1_databases": [
         {
@@ -40,17 +55,30 @@
           "database_id": "4036bdf9-7638-4686-a8b9-166b357284dd",
         },
       ],
+      "kv_namespaces": [
+        {
+          "binding": "SESSION_KV",
+          "id": "088dc9746a9642d6a48f247f5cf6990d",
+        },
+      ],
     },
     "staging": {
       "name": "tanstack-start-app-staging",
       "vars": {
         "ENVIRONMENT": "staging",
+        "BASE_URL": "https://tanstack-start-app-staging.tomoya0209.workers.dev",
       },
       "d1_databases": [
         {
           "binding": "DB",
           "database_name": "tanstack-test-staging",
           "database_id": "eb2ef97c-5e2c-4527-86a1-267ad97d9c25",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "SESSION_KV",
+          "id": "97ad945f272d4adc8ef239848bf9167d",
         },
       ],
     },

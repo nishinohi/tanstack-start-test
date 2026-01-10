@@ -8,7 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import type { NewTodo } from '@/db/schema/schema'
 import { todos } from '@/db/schema/schema'
-import { getDb } from '@/db/client'
+import { getDb } from '@/lib/server-client'
+import { authMiddleware } from '@/middleware/auth'
 
 // Zod スキーマ定義
 const todoFormSchema = z.object({
@@ -35,6 +36,9 @@ const deleteTodoSchema = z.object({
 
 export const Route = createFileRoute('/db-test')({
   component: DBTestPage,
+  server: {
+    middleware: [authMiddleware],
+  },
 })
 
 // すべてのTodoを取得
