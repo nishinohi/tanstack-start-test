@@ -29,6 +29,9 @@ pnpm dev
 # Build for production
 pnpm build
 
+# Build with bundle size analysis (opens stats.html in browser)
+pnpm build:analyze
+
 # Preview production build
 pnpm preview
 
@@ -51,7 +54,7 @@ pnpm check
 # - main branch → production
 # - staging branch → staging environment
 # - develop branch → develop environment
-# Manual deployment can be done using `wrangler deploy` commands directly
+# Manual deployment requires using `wrangler deploy` commands directly
 
 # Generate Cloudflare Worker types
 pnpm typegen:cf
@@ -123,6 +126,8 @@ Better Auth is integrated for authentication with Drizzle adapter:
 - Uses `better-auth/adapters/drizzle` with SQLite provider
 - Auth schema is defined in `src/db/schema/auth.ts`
 - The `auth.ts` file is a configuration file for schema generation (database instance is not required)
+- Session storage: Uses Cloudflare KV via `SESSION_KV` binding for server-side session management
+- BASE_URL configuration: Set via `wrangler.jsonc` for each environment, used for authentication callbacks
 
 ### Database Layer (Drizzle ORM + Cloudflare D1)
 
@@ -142,13 +147,13 @@ The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
 
 Each environment has its own D1 database instance configured in `wrangler.jsonc`:
 
-- `local`: Local D1 instance for development (via `pnpm dev`)
-- `start`: Additional local environment for testing (uses local flag)
-- `develop`: Remote D1 instance for develop environment
-- `staging`: Remote D1 instance for staging environment
-- `production`: Remote D1 instance for production environment
+- `local`: Local D1 instance for development (via `pnpm dev`, database: `tanstack-test-local`)
+- `start`: Additional local environment for testing (uses local flag, database: same as production)
+- `develop`: Remote D1 instance for develop environment (database: `tanstack-test-develop`)
+- `staging`: Remote D1 instance for staging environment (database: `tanstack-test-staging`)
+- `production`: Remote D1 instance for production environment (database: `tanstack-test`)
 
-Note: The "start" environment uses local D1 like "local" but provides a separate configuration for testing purposes.
+Note: The "start" environment uses local D1 like "local" but provides a separate configuration for testing production-like setups locally.
 
 **Drizzle configuration pattern:**
 
@@ -264,12 +269,18 @@ All hooks use `stage_fixed: true` to automatically stage fixes.
 - Uses `@tanstack/react-start/server-entry` as main entry
 - Requires `nodejs_compat` compatibility flag
 - Compatibility date: 2025-09-02
-- Four environments configured:
+- Five environments configured:
   - **Local**: `tanstack-start-app-local` (development via `pnpm dev`, uses `CLOUDFLARE_ENV=local`)
-  - **Production**: `tanstack-start-app` (default)
-  - **Develop**: `tanstack-start-app-develop`
-  - **Staging**: `tanstack-start-app-staging`
-- Environment variables set via `vars` in `wrangler.jsonc`
+  - **Start**: `tanstack-start-app-start` (local testing environment, uses same database as production)
+  - **Develop**: `tanstack-start-app-develop` (remote development environment)
+  - **Staging**: `tanstack-start-app-staging` (remote staging environment)
+  - **Production**: `tanstack-start-app` (default, remote production environment)
+- Environment variables set via `vars` in `wrangler.jsonc`:
+  - `ENVIRONMENT`: Current environment name (local/start/develop/staging/production)
+  - `BASE_URL`: Base URL for the application (used for authentication callbacks, etc.)
+- Cloudflare bindings:
+  - **D1 Database** (`DB` binding): SQLite database for data persistence
+  - **KV Namespace** (`SESSION_KV` binding): Key-Value store for session management
 - Local environment variables should be stored in `.dev.vars` or `.env` files:
   - `.dev.vars` / `.env`: Default environment variables for local development
   - `.dev.vars.local` / `.env.local`: Local environment-specific variables (loaded when `CLOUDFLARE_ENV=local`)
@@ -312,6 +323,10 @@ The following Vite plugins are configured (in order):
 4. `@tailwindcss/vite` - Tailwind CSS v4
 5. `@tanstack/react-start/plugin/vite` - TanStack Start
 6. `@vitejs/plugin-react` - React support
+7. `rollup-plugin-visualizer` - Bundle size analysis (enabled via `ANALYZE=true` env var)
+   - Generates `./dist/stats.html` with interactive visualization
+   - Shows gzip and brotli sizes
+   - Automatically opens in browser after build
 
 ## Key Patterns
 
@@ -400,11 +415,13 @@ migrations/           # Auto-generated database migration files
   - For environment-specific variables, create `.dev.vars.local` or `.env.local`
   - The `CLOUDFLARE_ENV` variable controls which environment configuration is used (set to `local` in `pnpm dev`)
 - **Deployment variables**: Configure in `wrangler.jsonc` under `vars` (production) or `env.<environment>.vars` (per environment)
-- **ENVIRONMENT variable**: Automatically set based on the selected environment:
-  - `local` during development (`pnpm dev`)
-  - `production` for default deployment
-  - `develop` via `pnpm deploy:dev`
-  - `staging` via `pnpm deploy:staging`
+- **Built-in environment variables**: Automatically set based on the selected environment:
+  - `ENVIRONMENT`: Current environment name (local/start/develop/staging/production)
+  - `BASE_URL`: Base URL for the application
+    - `http://localhost:3000` for local
+    - `https://tanstack-start-app-develop.tomoya0209.workers.dev` for develop
+    - `https://tanstack-start-app-staging.tomoya0209.workers.dev` for staging
+    - `https://tanstack-start-app.tomoya0209.workers.dev` for production
 
 ### Database Credential Environment Variables
 
