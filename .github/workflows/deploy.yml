@@ -11,6 +11,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy to Cloudflare Workers
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/staging' && 'staging' || 'develop') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +33,7 @@ jobs:
         run: pnpm build
         env:
           CLOUDFLARE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/staging' && 'staging' || 'develop') }}
+          VITE_BASE_URL: ${{ vars.VITE_BASE_URL }}
 
       - name: Deploy to Cloudflare Workers (Production)
         if: github.ref == 'refs/heads/main'
