@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "CLOUDFLARE_ENV=local vite dev --port 3000",
     "build": "vite build",
+    "build:analyze": "ANALYZE=true vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "typegen:cf": "wrangler types",
@@ -80,6 +81,7 @@
     "lefthook": "^2.0.13",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "rollup-plugin-visualizer": "^6.0.5",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
     "textlint": "^15.5.0",

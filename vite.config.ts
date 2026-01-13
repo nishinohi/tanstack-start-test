@@ -6,6 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 import viteReact from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 const config = defineConfig({
   plugins: [
@@ -18,6 +19,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart(),
     viteReact(),
+    process.env.ANALYZE === 'true' && visualizer({ emitFile: true, gzipSize: true, brotliSize: true }),
   ],
 })
 
