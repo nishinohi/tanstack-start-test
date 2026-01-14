@@ -151,9 +151,7 @@ function DBTestPage() {
   }
 
   const handleDelete = (id: number) => {
-    if (confirm('このTodoを削除しますか？')) {
-      deleteMutation.mutate({ id })
-    }
+    deleteMutation.mutate({ id })
   }
 
   const startEdit = (id: number, title: string) => {
@@ -230,7 +228,6 @@ function DBTestPage() {
                       type="text"
                       {...editForm.register('title')}
                       className="w-full rounded border border-gray-300 px-3 py-1 focus:border-blue-500 focus:outline-none"
-                      autoFocus
                     />
                     {editForm.formState.errors.title && (
                       <p className="mt-1 text-xs text-red-500">{editForm.formState.errors.title.message}</p>
