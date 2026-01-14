@@ -20,7 +20,7 @@ export function loadD1Credentials(mode: DBMode): D1LocalCredentials | D1RemoteCr
   const url = process.env.D1_LOCAL_URL
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
   const databaseId = process.env.D1_ID
-  const token = process.env.CLOUDFLARE_TOKEN
+  const token = process.env.CLOUDFLARE_D1_TOKEN
 
   if (mode === 'local' || mode === 'start') {
     if (!url)
