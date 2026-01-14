@@ -10,7 +10,7 @@
         "--context",
         "ide-assistant",
         "--project",
-        "/Users/nishi/workspace/azone/azttract"
+        "/Users/nishi/workspace/test/tanstack-start-test"
       ],
       "env": {}
     }
