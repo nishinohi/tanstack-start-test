@@ -34,7 +34,7 @@ const deleteTodoSchema = z.object({
   id: z.number().int().positive(),
 })
 
-export const Route = createFileRoute('/db-test')({
+export const Route = createFileRoute('/demo/start/ssr/non-streaming-ssr-db')({
   component: DBTestPage,
   server: {
     middleware: [authMiddleware],
@@ -174,7 +174,7 @@ function DBTestPage() {
 
   return (
     <div className="container mx-auto max-w-4xl p-8">
-      <h1 className="mb-8 text-3xl font-bold">D1 Database Test - CRUD Operations</h1>
+      <h1 className="mb-8 text-3xl font-bold">Non-streaming SSR DB - CRUD Operations</h1>
 
       {/* 新規作成フォーム */}
       <div className="mb-8 rounded-lg border border-gray-300 bg-white p-6 shadow-sm">

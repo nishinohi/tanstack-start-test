@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EnvRouteImport } from './routes/env'
-import { Route as DbTestRouteImport } from './routes/db-test'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -21,6 +20,7 @@ import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
+import { Route as DemoStartSsrNonStreamingSsrDbRouteImport } from './routes/demo/start.ssr.non-streaming-ssr-db'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
@@ -32,11 +32,6 @@ const LoginRoute = LoginRouteImport.update({
 const EnvRoute = EnvRouteImport.update({
   id: '/env',
   path: '/env',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DbTestRoute = DbTestRouteImport.update({
-  id: '/db-test',
-  path: '/db-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -84,6 +79,12 @@ const DemoStartSsrSpaModeRoute = DemoStartSsrSpaModeRouteImport.update({
   path: '/demo/start/ssr/spa-mode',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoStartSsrNonStreamingSsrDbRoute =
+  DemoStartSsrNonStreamingSsrDbRouteImport.update({
+    id: '/demo/start/ssr/non-streaming-ssr-db',
+    path: '/demo/start/ssr/non-streaming-ssr-db',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DemoStartSsrFullSsrRoute = DemoStartSsrFullSsrRouteImport.update({
   id: '/demo/start/ssr/full-ssr',
   path: '/demo/start/ssr/full-ssr',
@@ -97,7 +98,6 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/db-test': typeof DbTestRoute
   '/env': typeof EnvRoute
   '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -108,12 +108,12 @@ export interface FileRoutesByFullPath {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/db-test': typeof DbTestRoute
   '/env': typeof EnvRoute
   '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -124,13 +124,13 @@ export interface FileRoutesByTo {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/db-test': typeof DbTestRoute
   '/env': typeof EnvRoute
   '/login': typeof LoginRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -141,6 +141,7 @@ export interface FileRoutesById {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
 }
@@ -148,7 +149,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/db-test'
     | '/env'
     | '/login'
     | '/demo/tanstack-query'
@@ -159,12 +159,12 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/db-test'
     | '/env'
     | '/login'
     | '/demo/tanstack-query'
@@ -175,12 +175,12 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr'
   id:
     | '__root__'
     | '/'
-    | '/db-test'
     | '/env'
     | '/login'
     | '/demo/tanstack-query'
@@ -191,13 +191,13 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DbTestRoute: typeof DbTestRoute
   EnvRoute: typeof EnvRoute
   LoginRoute: typeof LoginRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
@@ -208,6 +208,7 @@ export interface RootRouteChildren {
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute
   DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
+  DemoStartSsrNonStreamingSsrDbRoute: typeof DemoStartSsrNonStreamingSsrDbRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
   DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute
 }
@@ -226,13 +227,6 @@ declare module '@tanstack/react-router' {
       path: '/env'
       fullPath: '/env'
       preLoaderRoute: typeof EnvRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/db-test': {
-      id: '/db-test'
-      path: '/db-test'
-      fullPath: '/db-test'
-      preLoaderRoute: typeof DbTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -298,6 +292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoStartSsrSpaModeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/start/ssr/non-streaming-ssr-db': {
+      id: '/demo/start/ssr/non-streaming-ssr-db'
+      path: '/demo/start/ssr/non-streaming-ssr-db'
+      fullPath: '/demo/start/ssr/non-streaming-ssr-db'
+      preLoaderRoute: typeof DemoStartSsrNonStreamingSsrDbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/start/ssr/full-ssr': {
       id: '/demo/start/ssr/full-ssr'
       path: '/demo/start/ssr/full-ssr'
@@ -317,7 +318,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DbTestRoute: DbTestRoute,
   EnvRoute: EnvRoute,
   LoginRoute: LoginRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
@@ -328,6 +328,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
   DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
   DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
+  DemoStartSsrNonStreamingSsrDbRoute: DemoStartSsrNonStreamingSsrDbRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
   DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
 }

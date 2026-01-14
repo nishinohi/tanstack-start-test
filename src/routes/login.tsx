@@ -24,7 +24,7 @@ export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
     const session = await checkSession()
     if (session) {
-      throw redirect({ to: '/db-test' })
+      throw redirect({ to: '/demo/start/ssr/non-streaming-ssr-db' })
     }
   },
 })
