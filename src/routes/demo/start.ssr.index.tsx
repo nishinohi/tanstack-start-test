@@ -36,6 +36,12 @@ function RouteComponent() {
             Data Only
           </Link>
           <Link
+            to="/demo/start/ssr/non-streaming-ssr-client-fetch-db"
+            className="transform rounded-lg border-2 border-yellow-400 bg-linear-to-r from-yellow-500 to-amber-500 px-8 py-6 text-center text-2xl font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-yellow-600 hover:to-amber-600 hover:shadow-yellow-500/50"
+          >
+            Non Streaming SSR Client Fetch DB
+          </Link>
+          <Link
             to="/demo/start/ssr/non-streaming-ssr-db"
             className="transform rounded-lg border-2 border-yellow-400 bg-linear-to-r from-yellow-500 to-amber-500 px-8 py-6 text-center text-2xl font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-yellow-600 hover:to-amber-600 hover:shadow-yellow-500/50"
           >

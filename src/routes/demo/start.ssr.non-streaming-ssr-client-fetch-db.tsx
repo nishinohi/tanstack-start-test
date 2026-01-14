@@ -34,15 +34,8 @@ const deleteTodoSchema = z.object({
   id: z.number().int().positive(),
 })
 
-export const Route = createFileRoute('/demo/start/ssr/non-streaming-ssr-db')({
+export const Route = createFileRoute('/demo/start/ssr/non-streaming-ssr-client-fetch-db')({
   component: DBTestPage,
-  loader: async ({ context }) => {
-    // サーバー側でTodosを取得し、Query Clientにキャッシュ
-    await context.queryClient.ensureQueryData({
-      queryKey: ['todos'],
-      queryFn: () => getAllTodos(),
-    })
-  },
   server: {
     middleware: [authMiddleware],
   },

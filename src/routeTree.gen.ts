@@ -21,6 +21,7 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrNonStreamingSsrDbRouteImport } from './routes/demo/start.ssr.non-streaming-ssr-db'
+import { Route as DemoStartSsrNonStreamingSsrClientFetchDbRouteImport } from './routes/demo/start.ssr.non-streaming-ssr-client-fetch-db'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
@@ -85,6 +86,12 @@ const DemoStartSsrNonStreamingSsrDbRoute =
     path: '/demo/start/ssr/non-streaming-ssr-db',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DemoStartSsrNonStreamingSsrClientFetchDbRoute =
+  DemoStartSsrNonStreamingSsrClientFetchDbRouteImport.update({
+    id: '/demo/start/ssr/non-streaming-ssr-client-fetch-db',
+    path: '/demo/start/ssr/non-streaming-ssr-client-fetch-db',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DemoStartSsrFullSsrRoute = DemoStartSsrFullSsrRouteImport.update({
   id: '/demo/start/ssr/full-ssr',
   path: '/demo/start/ssr/full-ssr',
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-client-fetch-db': typeof DemoStartSsrNonStreamingSsrClientFetchDbRoute
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-client-fetch-db': typeof DemoStartSsrNonStreamingSsrClientFetchDbRoute
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
+  '/demo/start/ssr/non-streaming-ssr-client-fetch-db': typeof DemoStartSsrNonStreamingSsrClientFetchDbRoute
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr'
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/demo/start/server-funcs'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
+    | '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr/'
@@ -208,6 +221,7 @@ export interface RootRouteChildren {
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute
   DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
+  DemoStartSsrNonStreamingSsrClientFetchDbRoute: typeof DemoStartSsrNonStreamingSsrClientFetchDbRoute
   DemoStartSsrNonStreamingSsrDbRoute: typeof DemoStartSsrNonStreamingSsrDbRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
   DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute
@@ -299,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoStartSsrNonStreamingSsrDbRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/start/ssr/non-streaming-ssr-client-fetch-db': {
+      id: '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
+      path: '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
+      fullPath: '/demo/start/ssr/non-streaming-ssr-client-fetch-db'
+      preLoaderRoute: typeof DemoStartSsrNonStreamingSsrClientFetchDbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/start/ssr/full-ssr': {
       id: '/demo/start/ssr/full-ssr'
       path: '/demo/start/ssr/full-ssr'
@@ -328,6 +349,8 @@ const rootRouteChildren: RootRouteChildren = {
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
   DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
   DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
+  DemoStartSsrNonStreamingSsrClientFetchDbRoute:
+    DemoStartSsrNonStreamingSsrClientFetchDbRoute,
   DemoStartSsrNonStreamingSsrDbRoute: DemoStartSsrNonStreamingSsrDbRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
   DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
