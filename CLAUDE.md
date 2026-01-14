@@ -50,11 +50,10 @@ pnpm format
 # Format and lint fix (runs prettier --write + eslint --fix)
 pnpm check
 
-# Note: Deployment is handled automatically via GitHub Actions:
+# Note: Automatic deployment via GitHub Actions:
 # - main branch → production
 # - staging branch → staging environment
 # - develop branch → develop environment
-# Manual deployment requires using `wrangler deploy` commands directly
 
 # Generate Cloudflare Worker types
 pnpm typegen:cf
@@ -65,17 +64,17 @@ pnpm dlx shadcn@latest add <component-name>
 # Database commands (Drizzle ORM with Cloudflare D1)
 pnpm db:generate              # Generate migration files from schema
 pnpm db:migrate:local         # Run migrations (local D1)
-pnpm db:migrate:start         # Run migrations (start environment)
+pnpm db:migrate:start         # Run migrations (start environment - uses production DB locally)
 pnpm db:migrate:dev           # Run migrations (develop environment, remote)
 pnpm db:migrate:stg           # Run migrations (staging environment, remote)
 pnpm db:migrate:prod          # Run migrations (production environment, remote)
 pnpm db:view:local            # Open Drizzle Studio (local)
-pnpm db:view:start            # Open Drizzle Studio (start environment)
+pnpm db:view:start            # Open Drizzle Studio (start environment - uses production DB locally)
 pnpm db:view:dev              # Open Drizzle Studio (develop environment)
 pnpm db:view:stg              # Open Drizzle Studio (staging environment)
 pnpm db:view:prod             # Open Drizzle Studio (production environment)
 pnpm db:drop:local            # Drop all tables (local, uses local flag)
-pnpm db:drop:start            # Drop all tables (start environment, uses local flag)
+pnpm db:drop:start            # Drop all tables (start environment - uses production DB locally)
 pnpm db:drop:dev              # Drop all tables (develop environment, remote)
 pnpm db:drop:stg              # Drop all tables (staging environment, remote)
 pnpm db:drop:prod             # Warning message only - must execute manually
@@ -148,12 +147,12 @@ The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
 Each environment has its own D1 database instance configured in `wrangler.jsonc`:
 
 - `local`: Local D1 instance for development (via `pnpm dev`, database: `tanstack-test-local`)
-- `start`: Additional local environment for testing (uses local flag, database: same as production)
+- `start`: Alternative local testing environment (uses production database locally via `--local` flag)
 - `develop`: Remote D1 instance for develop environment (database: `tanstack-test-develop`)
 - `staging`: Remote D1 instance for staging environment (database: `tanstack-test-staging`)
 - `production`: Remote D1 instance for production environment (database: `tanstack-test`)
 
-Note: The "start" environment uses local D1 like "local" but provides a separate configuration for testing production-like setups locally.
+Note: The "start" environment is for local testing with production database schema. It uses wrangler's `--local` flag but references the production database configuration.
 
 **Drizzle configuration pattern:**
 
@@ -269,12 +268,12 @@ All hooks use `stage_fixed: true` to automatically stage fixes.
 - Uses `@tanstack/react-start/server-entry` as main entry
 - Requires `nodejs_compat` compatibility flag
 - Compatibility date: 2025-09-02
-- Five environments configured:
+- Three environments configured in `wrangler.jsonc`:
   - **Local**: `tanstack-start-app-local` (development via `pnpm dev`, uses `CLOUDFLARE_ENV=local`)
-  - **Start**: `tanstack-start-app-start` (local testing environment, uses same database as production)
   - **Develop**: `tanstack-start-app-develop` (remote development environment)
   - **Staging**: `tanstack-start-app-staging` (remote staging environment)
   - **Production**: `tanstack-start-app` (default, remote production environment)
+- **Start environment**: Referenced in Drizzle commands but not defined in `wrangler.jsonc` - uses production database locally via `--local` flag
 - Environment variables set via `vars` in `wrangler.jsonc`:
   - `ENVIRONMENT`: Current environment name (local/start/develop/staging/production)
   - `BASE_URL`: Base URL for the application (used for authentication callbacks, etc.)
@@ -312,6 +311,24 @@ Automatic deployment is configured via `.github/workflows/deploy.yml`:
 - The workflow uses `pnpm/action-setup@v4` without specifying a version, which automatically uses the version defined in package.json's `packageManager` field (pnpm@10.27.0)
 - Node.js version is set to 24.11 to match the `engines` field in package.json
 - This ensures consistency between local development and CI/CD environments
+
+### Manual Deployment
+
+For manual deployments, use the Wrangler CLI directly:
+
+```bash
+# Deploy to production (default)
+wrangler deploy
+
+# Deploy to specific environments
+wrangler deploy --env develop
+wrangler deploy --env staging
+```
+
+**Prerequisites:**
+
+- Ensure you're authenticated: `wrangler login` or set `CLOUDFLARE_API_TOKEN` environment variable
+- Build the application first: `pnpm build`
 
 ## Vite Plugins
 
@@ -416,7 +433,7 @@ migrations/           # Auto-generated database migration files
   - The `CLOUDFLARE_ENV` variable controls which environment configuration is used (set to `local` in `pnpm dev`)
 - **Deployment variables**: Configure in `wrangler.jsonc` under `vars` (production) or `env.<environment>.vars` (per environment)
 - **Built-in environment variables**: Automatically set based on the selected environment:
-  - `ENVIRONMENT`: Current environment name (local/start/develop/staging/production)
+  - `ENVIRONMENT`: Current environment name (local/develop/staging/production)
   - `BASE_URL`: Base URL for the application
     - `http://localhost:3000` for local
     - `https://tanstack-start-app-develop.tomoya0209.workers.dev` for develop
