@@ -4,3 +4,5 @@ yarn.lock
 .claude/*
 worker-configuration.d.ts
 routeTree.gen.ts
+.serena
+dist

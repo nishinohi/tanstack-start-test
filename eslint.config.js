@@ -387,6 +387,9 @@ export default [
       // 生成されたファイル
       '**/*.generated.*',
       '**/routeTree.gen.ts',
+
+      // ai agent
+      '**/.serena/**',
     ],
   },
 
