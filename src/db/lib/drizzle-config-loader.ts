@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 
-export type DBMode = 'local' | 'staging' | 'production' | 'develop' | 'start'
+export type DBMode = 'local' | 'staging' | 'production' | 'develop' | 'preview'
 
 type D1RemoteCredentials = {
   accountId: string
@@ -22,7 +22,7 @@ export function loadD1Credentials(mode: DBMode): D1LocalCredentials | D1RemoteCr
   const databaseId = process.env.D1_ID
   const token = process.env.CLOUDFLARE_D1_TOKEN
 
-  if (mode === 'local' || mode === 'start') {
+  if (mode === 'local' || mode === 'preview') {
     if (!url)
       throw Error(
         `The DB URL is not set. Please execute the following command to set a value for D1_LOCAL_URL in .env.${mode}.

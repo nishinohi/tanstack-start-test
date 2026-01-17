@@ -2,7 +2,7 @@ import { defineConfig } from 'drizzle-kit'
 
 import { loadD1Credentials } from '../lib/drizzle-config-loader'
 
-const dbCredentials = loadD1Credentials('start')
+const dbCredentials = loadD1Credentials('preview')
 
 export default defineConfig({
   schema: './src/db/schema',
