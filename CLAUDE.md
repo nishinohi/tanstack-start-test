@@ -29,10 +29,13 @@ pnpm dev
 # Build for production
 pnpm build
 
+# Build for preview environment (local testing with preview DB)
+pnpm build:preview
+
 # Build with bundle size analysis (opens stats.html in browser)
 pnpm build:analyze
 
-# Preview production build
+# Preview production build (runs on port 4173)
 pnpm preview
 
 # Run tests (Vitest)
@@ -64,17 +67,17 @@ pnpm dlx shadcn@latest add <component-name>
 # Database commands (Drizzle ORM with Cloudflare D1)
 pnpm db:generate              # Generate migration files from schema
 pnpm db:migrate:local         # Run migrations (local D1)
-pnpm db:migrate:start         # Run migrations (start environment - uses production DB locally)
+pnpm db:migrate:preview       # Run migrations (preview environment - local with separate DB)
 pnpm db:migrate:dev           # Run migrations (develop environment, remote)
 pnpm db:migrate:stg           # Run migrations (staging environment, remote)
 pnpm db:migrate:prod          # Run migrations (production environment, remote)
 pnpm db:view:local            # Open Drizzle Studio (local)
-pnpm db:view:start            # Open Drizzle Studio (start environment - uses production DB locally)
+pnpm db:view:preview          # Open Drizzle Studio (preview environment)
 pnpm db:view:dev              # Open Drizzle Studio (develop environment)
 pnpm db:view:stg              # Open Drizzle Studio (staging environment)
 pnpm db:view:prod             # Open Drizzle Studio (production environment)
 pnpm db:drop:local            # Drop all tables (local, uses local flag)
-pnpm db:drop:start            # Drop all tables (start environment - uses production DB locally)
+pnpm db:drop:preview          # Drop all tables (preview environment, uses local flag)
 pnpm db:drop:dev              # Drop all tables (develop environment, remote)
 pnpm db:drop:stg              # Drop all tables (staging environment, remote)
 pnpm db:drop:prod             # Warning message only - must execute manually
@@ -147,19 +150,19 @@ The database layer uses Drizzle ORM with Cloudflare D1 (serverless SQLite):
 Each environment has its own D1 database instance configured in `wrangler.jsonc`:
 
 - `local`: Local D1 instance for development (via `pnpm dev`, database: `tanstack-test-local`)
-- `start`: Alternative local testing environment (uses production database locally via `--local` flag)
+- `preview`: Local preview build testing environment (uses separate preview database locally, database: `tanstack-test-preview`)
 - `develop`: Remote D1 instance for develop environment (database: `tanstack-test-develop`)
 - `staging`: Remote D1 instance for staging environment (database: `tanstack-test-staging`)
 - `production`: Remote D1 instance for production environment (database: `tanstack-test`)
 
-Note: The "start" environment is for local testing with production database schema. It uses wrangler's `--local` flag but references the production database configuration.
+Note: The "preview" environment is for local testing of production builds (`pnpm build:preview` + `pnpm preview`). It uses wrangler's `--local` flag with a separate preview database instance.
 
 **Drizzle configuration pattern:**
 
 Drizzle configs use environment-specific credential loading:
 
-- **Local/Start environments**: Uses local SQLite file (`.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`)
-  - Requires `D1_LOCAL_URL` in `.env.local` or `.env.start`
+- **Local/Preview environments**: Uses local SQLite file (`.wrangler/state/v3/d1/miniflare-D1DatabaseObject/*.sqlite`)
+  - Requires `D1_LOCAL_URL` in `.env.local` or `.env.preview`
 - **Remote environments** (develop/staging/production): Uses Cloudflare D1 API
   - Requires `CLOUDFLARE_ACCOUNT_ID`, `D1_ID`, `CLOUDFLARE_API_TOKEN` in respective `.env.*` files
 
@@ -268,14 +271,26 @@ All hooks use `stage_fixed: true` to automatically stage fixes.
 - Uses `@tanstack/react-start/server-entry` as main entry
 - Requires `nodejs_compat` compatibility flag
 - Compatibility date: 2025-09-02
-- Three environments configured in `wrangler.jsonc`:
+- Four environments configured in `wrangler.jsonc`:
   - **Local**: `tanstack-start-app-local` (development via `pnpm dev`, uses `CLOUDFLARE_ENV=local`)
+  - **Preview**: `tanstack-start-app-preview` (local preview build testing)
   - **Develop**: `tanstack-start-app-develop` (remote development environment)
   - **Staging**: `tanstack-start-app-staging` (remote staging environment)
   - **Production**: `tanstack-start-app` (default, remote production environment)
-- **Start environment**: Referenced in Drizzle commands but not defined in `wrangler.jsonc` - uses production database locally via `--local` flag
+
+**IMPORTANT: Environment Selection with Vite Plugin**
+
+When using `@cloudflare/vite-plugin`, you **MUST** use the `CLOUDFLARE_ENV` environment variable to specify which environment to use. The standard wrangler `--env` flag is **NOT supported**.
+
+- ✅ **Correct**: `CLOUDFLARE_ENV=local pnpm dev`
+- ❌ **Incorrect**: `wrangler dev --env local`
+
+This is already configured in package.json scripts. See [Cloudflare documentation](https://developers.cloudflare.com/workers/vite-plugin/reference/cloudflare-environments/) for details.
+
+For a comprehensive guide, see [docs/cloudflare-environment-setup.md](./docs/cloudflare-environment-setup.md).
+
 - Environment variables set via `vars` in `wrangler.jsonc`:
-  - `ENVIRONMENT`: Current environment name (local/start/develop/staging/production)
+  - `ENVIRONMENT`: Current environment name (local/preview/develop/staging/production)
   - `BASE_URL`: Base URL for the application (used for authentication callbacks, etc.)
 - Cloudflare bindings:
   - **D1 Database** (`DB` binding): SQLite database for data persistence
@@ -433,9 +448,10 @@ migrations/           # Auto-generated database migration files
   - The `CLOUDFLARE_ENV` variable controls which environment configuration is used (set to `local` in `pnpm dev`)
 - **Deployment variables**: Configure in `wrangler.jsonc` under `vars` (production) or `env.<environment>.vars` (per environment)
 - **Built-in environment variables**: Automatically set based on the selected environment:
-  - `ENVIRONMENT`: Current environment name (local/develop/staging/production)
+  - `ENVIRONMENT`: Current environment name (local/preview/develop/staging/production)
   - `BASE_URL`: Base URL for the application
     - `http://localhost:3000` for local
+    - `http://localhost:4173` for preview
     - `https://tanstack-start-app-develop.tomoya0209.workers.dev` for develop
     - `https://tanstack-start-app-staging.tomoya0209.workers.dev` for staging
     - `https://tanstack-start-app.tomoya0209.workers.dev` for production
@@ -444,7 +460,7 @@ migrations/           # Auto-generated database migration files
 
 For Drizzle migration and studio commands, create environment-specific `.env.*` files:
 
-- **Local/Start environments** (`.env.local`, `.env.start`):
+- **Local/Preview environments** (`.env.local`, `.env.preview`):
 
   ```bash
   D1_LOCAL_URL='./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/[your_database_id].sqlite'
