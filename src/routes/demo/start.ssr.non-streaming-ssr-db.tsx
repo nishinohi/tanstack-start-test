@@ -1,5 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
@@ -36,16 +35,14 @@ const deleteTodoSchema = z.object({
 
 export const Route = createFileRoute('/demo/start/ssr/non-streaming-ssr-db')({
   component: DBTestPage,
-  loader: async ({ context }) => {
-    // サーバー側でTodosを取得し、Query Clientにキャッシュ
-    await context.queryClient.ensureQueryData({
-      queryKey: ['todos'],
-      queryFn: () => getAllTodos(),
-    })
-  },
+  loader: () => getAllTodos(),
   server: {
     middleware: [authMiddleware],
   },
+  gcTime: 0,
+  pendingComponent: () => <div className="h-60 w-60 bg-red-700 text-xl font-bold text-white">loading...</div>,
+  pendingMs: 100,
+  pendingMinMs: 3000,
 })
 
 // すべてのTodoを取得
@@ -93,8 +90,10 @@ export const deleteTodo = createServerFn({ method: 'POST' })
   })
 
 function DBTestPage() {
-  const queryClient = useQueryClient()
+  const router = useRouter()
+  const todoList = Route.useLoaderData()
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 新規作成フォーム
   const createForm = useForm<TodoFormData>({
@@ -112,53 +111,48 @@ function DBTestPage() {
     },
   })
 
-  // Todosを取得
-  const { data: todoList = [], isLoading } = useQuery({
-    queryKey: ['todos'],
-    queryFn: () => getAllTodos(),
-  })
-
-  // Todo作成のMutation
-  const createMutation = useMutation({
-    mutationFn: (input: { title: string }) => createTodo({ data: input }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+  const handleCreate = async (data: TodoFormData) => {
+    setIsSubmitting(true)
+    try {
+      await createTodo({ data: { title: data.title } })
       createForm.reset()
-    },
-  })
+      // ルーターを無効化してloaderを再実行
+      await router.invalidate()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
-  // Todo更新のMutation
-  const updateMutation = useMutation({
-    mutationFn: (input: { id: number; title?: string; completed?: boolean }) => updateTodo({ data: input }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+  const handleUpdate = async (id: number, data: TodoFormData) => {
+    setIsSubmitting(true)
+    try {
+      await updateTodo({ data: { id, title: data.title } })
       setEditingId(null)
       editForm.reset()
-    },
-  })
-
-  // Todo削除のMutation
-  const deleteMutation = useMutation({
-    mutationFn: (input: { id: number }) => deleteTodo({ data: input }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
-    },
-  })
-
-  const handleCreate = (data: TodoFormData) => {
-    createMutation.mutate({ title: data.title })
+      await router.invalidate()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleUpdate = (id: number, data: TodoFormData) => {
-    updateMutation.mutate({ id, title: data.title })
+  const handleToggleComplete = async (id: number, completed: boolean) => {
+    setIsSubmitting(true)
+    try {
+      await updateTodo({ data: { id, completed: !completed } })
+      await router.invalidate()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  const handleToggleComplete = (id: number, completed: boolean) => {
-    updateMutation.mutate({ id, completed: !completed })
-  }
-
-  const handleDelete = (id: number) => {
-    deleteMutation.mutate({ id })
+  const handleDelete = async (id: number) => {
+    setIsSubmitting(true)
+    try {
+      await deleteTodo({ data: { id } })
+      await router.invalidate()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const startEdit = (id: number, title: string) => {
@@ -169,14 +163,6 @@ function DBTestPage() {
   const cancelEdit = () => {
     setEditingId(null)
     editForm.reset()
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto max-w-4xl p-8">
-        <p className="text-center text-gray-500">読み込み中...</p>
-      </div>
-    )
   }
 
   return (
@@ -196,10 +182,10 @@ function DBTestPage() {
             />
             <button
               type="submit"
-              disabled={createMutation.isPending}
+              disabled={isSubmitting}
               className="rounded bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {createMutation.isPending ? '作成中...' : '作成'}
+              {isSubmitting ? '作成中...' : '作成'}
             </button>
           </div>
           {createForm.formState.errors.title && (
@@ -225,7 +211,8 @@ function DBTestPage() {
                   type="checkbox"
                   checked={todo.completed}
                   onChange={() => handleToggleComplete(todo.id, todo.completed)}
-                  className="h-5 w-5 cursor-pointer"
+                  disabled={isSubmitting}
+                  className="h-5 w-5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 />
 
                 {/* タイトル表示/編集 */}
@@ -234,7 +221,8 @@ function DBTestPage() {
                     <input
                       type="text"
                       {...editForm.register('title')}
-                      className="w-full rounded border border-gray-300 px-3 py-1 focus:border-blue-500 focus:outline-none"
+                      disabled={isSubmitting}
+                      className="w-full rounded border border-gray-300 px-3 py-1 focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
                     />
                     {editForm.formState.errors.title && (
                       <p className="mt-1 text-xs text-red-500">{editForm.formState.errors.title.message}</p>
@@ -250,14 +238,15 @@ function DBTestPage() {
                     <>
                       <button
                         onClick={editForm.handleSubmit((data) => handleUpdate(todo.id, data))}
-                        disabled={updateMutation.isPending}
+                        disabled={isSubmitting}
                         className="rounded bg-green-500 px-3 py-1 text-sm text-white hover:bg-green-600 disabled:bg-gray-300"
                       >
                         保存
                       </button>
                       <button
                         onClick={cancelEdit}
-                        className="rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600"
+                        disabled={isSubmitting}
+                        className="rounded bg-gray-500 px-3 py-1 text-sm text-white hover:bg-gray-600 disabled:bg-gray-300"
                       >
                         キャンセル
                       </button>
@@ -266,13 +255,14 @@ function DBTestPage() {
                     <>
                       <button
                         onClick={() => startEdit(todo.id, todo.title)}
-                        className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+                        disabled={isSubmitting}
+                        className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600 disabled:bg-gray-300"
                       >
                         編集
                       </button>
                       <button
                         onClick={() => handleDelete(todo.id)}
-                        disabled={deleteMutation.isPending}
+                        disabled={isSubmitting}
                         className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600 disabled:bg-gray-300"
                       >
                         削除
