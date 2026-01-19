@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Suspense, use, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 import { createServerFn } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
 import { useForm } from 'react-hook-form'
@@ -53,6 +54,31 @@ type RecentActivity = {
   fetchedAt: string
 }
 
+// エラー表示コンポーネント
+function StreamingErrorFallback({ error, reset, title }: { error: unknown; reset: () => void; title: string }) {
+  const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
+
+  return (
+    <div className="rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">
+      <div className="flex items-center gap-2 text-red-600">
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="font-semibold">{title}の読み込みに失敗しました</span>
+      </div>
+      <p className="mt-2 text-sm text-red-500">{errorMessage}</p>
+      <button onClick={reset} className="mt-4 rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">
+        再試行
+      </button>
+    </div>
+  )
+}
+
 export const Route = createFileRoute('/demo/start/ssr/streaming-ssr-db')({
   component: StreamingDBTestPage,
   loader: () => {
@@ -67,10 +93,12 @@ export const Route = createFileRoute('/demo/start/ssr/streaming-ssr-db')({
     middleware: [authMiddleware],
   },
   gcTime: 0,
+  errorComponent: () => <div className="bg-green-400 text-2xl font-bold">this is error</div>,
 })
 
 // すべてのTodoを取得（ストリーミング対象 - 遅延あり）
 export const getAllTodos = createServerFn({ method: 'GET' }).handler(async () => {
+  if (Math.random() < 0.5) throw new Error('todo error')
   // 遅延シミュレーション: ストリーミングの効果を可視化
   const db = getDb()
   const allTodos = await db.select().from(todos).all()
@@ -258,52 +286,72 @@ function StreamingDBTestPage() {
         </form>
       </div>
 
-      {/* Todoリスト - ストリーミング（約0.5秒後） */}
+      {/* Todoリスト - ストリーミング */}
       <div className="mb-8 space-y-4">
         <h2 className="flex items-center gap-2 text-xl font-semibold">
           <span>Todoリスト</span>
         </h2>
-        <Suspense fallback={<TodoListLoadingSkeleton />}>
-          <TodoListComponent
-            promise={todoList}
-            editingId={editingId}
-            isSubmitting={isSubmitting}
-            editForm={editForm}
-            onToggleComplete={handleToggleComplete}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-            onStartEdit={startEdit}
-            onCancelEdit={cancelEdit}
-          />
-        </Suspense>
+        <ErrorBoundary
+          fallbackRender={({ error, resetErrorBoundary }) => (
+            <StreamingErrorFallback error={error} reset={resetErrorBoundary} title="Todoリスト" />
+          )}
+        >
+          <Suspense fallback={<TodoListLoadingSkeleton />}>
+            <TodoListComponent
+              promise={todoList}
+              editingId={editingId}
+              isSubmitting={isSubmitting}
+              editForm={editForm}
+              onToggleComplete={handleToggleComplete}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+              onStartEdit={startEdit}
+              onCancelEdit={cancelEdit}
+            />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
-      {/* 統計情報 - 非クリティカル（ストリーミング） */}
+      {/* 統計情報 - ストリーミング */}
       <div className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
           <span>📊 統計情報</span>
         </h2>
-        <Suspense fallback={<StatsLoadingSkeleton />}>
-          <TodoStatsComponent promise={stats} />
-        </Suspense>
+        <ErrorBoundary
+          fallbackRender={({ error, resetErrorBoundary }) => (
+            <StreamingErrorFallback error={error} reset={resetErrorBoundary} title="統計情報" />
+          )}
+        >
+          <Suspense fallback={<StatsLoadingSkeleton />}>
+            <TodoStatsComponent promise={stats} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
-      {/* 最近の更新履歴 - 非クリティカル（ストリーミング） */}
+      {/* 最近の更新履歴 - ストリーミング */}
       <div className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
           <span>📜 最近の更新履歴</span>
         </h2>
-        <Suspense fallback={<ActivityLoadingSkeleton />}>
-          <RecentActivityComponent promise={recentActivity} />
-        </Suspense>
+        <ErrorBoundary
+          fallbackRender={({ error, resetErrorBoundary }) => (
+            <StreamingErrorFallback error={error} reset={resetErrorBoundary} title="更新履歴" />
+          )}
+        >
+          <Suspense fallback={<ActivityLoadingSkeleton />}>
+            <RecentActivityComponent promise={recentActivity} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       {/* デバッグ情報 */}
       <div className="mt-8 rounded-lg border border-gray-300 bg-gray-50 p-4">
         <h3 className="mb-2 font-semibold">データベース情報（ストリーミングデータ）</h3>
-        <Suspense fallback={<div className="text-gray-400">読み込み中...</div>}>
-          <DebugDataComponent promise={todoList} />
-        </Suspense>
+        <ErrorBoundary fallback={<div className="text-red-500">データの読み込みに失敗しました</div>}>
+          <Suspense fallback={<div className="text-gray-400">読み込み中...</div>}>
+            <DebugDataComponent promise={todoList} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   )
