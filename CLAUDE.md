@@ -41,6 +41,15 @@ pnpm preview
 # Run tests (Vitest)
 pnpm test
 
+# Run specific test file
+pnpm test src/path/to/test.test.ts
+
+# Run tests matching a pattern
+pnpm test -t "pattern"
+
+# Run tests in watch mode
+pnpm vitest
+
 # Type checking (TypeScript)
 pnpm typecheck
 
@@ -271,7 +280,7 @@ All hooks use `stage_fixed: true` to automatically stage fixes.
 - Uses `@tanstack/react-start/server-entry` as main entry
 - Requires `nodejs_compat` compatibility flag
 - Compatibility date: 2025-09-02
-- Four environments configured in `wrangler.jsonc`:
+- Five environments configured in `wrangler.jsonc`:
   - **Local**: `tanstack-start-app-local` (development via `pnpm dev`, uses `CLOUDFLARE_ENV=local`)
   - **Preview**: `tanstack-start-app-preview` (local preview build testing)
   - **Develop**: `tanstack-start-app-develop` (remote development environment)
