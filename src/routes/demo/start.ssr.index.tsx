@@ -59,6 +59,12 @@ function RouteComponent() {
           >
             ⚡ Streaming SSR DB
           </Link>
+          <Link
+            to="/demo/start/ssr/streaming-ssr-db-with-query"
+            className="transform rounded-lg border-2 border-cyan-400 bg-linear-to-r from-cyan-500 to-teal-500 px-8 py-6 text-center text-2xl font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-cyan-600 hover:to-teal-600 hover:shadow-cyan-500/50"
+          >
+            ⚡ Streaming SSR DB with Query
+          </Link>
         </div>
       </div>
     </div>
