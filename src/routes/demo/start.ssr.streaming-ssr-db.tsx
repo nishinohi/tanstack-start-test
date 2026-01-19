@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useMutation } from '@tanstack/react-query'
 import type { NewTodo, Todo } from '@/db/schema/schema'
 import { todos } from '@/db/schema/schema'
 import { getDb } from '@/lib/server-client'
@@ -183,7 +184,6 @@ function StreamingDBTestPage() {
   const router = useRouter()
   const { todoList, stats, recentActivity } = Route.useLoaderData()
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // 新規作成フォーム
   const createForm = useForm<TodoFormData>({
@@ -201,47 +201,61 @@ function StreamingDBTestPage() {
     },
   })
 
-  const handleCreate = async (data: TodoFormData) => {
-    setIsSubmitting(true)
-    try {
-      await createTodo({ data: { title: data.title } })
+  // Mutation: 新規作成
+  const createMutation = useMutation({
+    mutationFn: (input: { title: string }) => createTodo({ data: input }),
+    onSuccess: () => {
       createForm.reset()
-      await router.invalidate()
-    } finally {
-      setIsSubmitting(false)
-    }
+      router.invalidate()
+    },
+    onError: (error) => {
+      console.error('Todo作成エラー:', error)
+    },
+  })
+
+  // Mutation: 更新
+  const updateMutation = useMutation({
+    mutationFn: (input: { id: number; title?: string; completed?: boolean }) => updateTodo({ data: input }),
+    onSuccess: (_, variables) => {
+      // タイトル更新の場合は編集状態をリセット
+      if (variables.title !== undefined) {
+        setEditingId(null)
+        editForm.reset()
+      }
+      router.invalidate()
+    },
+    onError: (error, variables) => {
+      console.error(`Todo更新エラー (id: ${variables.id}):`, error)
+    },
+  })
+
+  // Mutation: 削除
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteTodo({ data: { id } }),
+    onSuccess: () => {
+      router.invalidate()
+    },
+    onError: (error, id) => {
+      console.error(`Todo削除エラー (id: ${id}):`, error)
+    },
+  })
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
+
+  const handleCreate = (data: TodoFormData) => {
+    createMutation.mutate({ title: data.title })
   }
 
-  const handleUpdate = async (id: number, data: TodoFormData) => {
-    setIsSubmitting(true)
-    try {
-      await updateTodo({ data: { id, title: data.title } })
-      setEditingId(null)
-      editForm.reset()
-      await router.invalidate()
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleUpdate = (id: number, data: TodoFormData) => {
+    updateMutation.mutate({ id, title: data.title })
   }
 
-  const handleToggleComplete = async (id: number, completed: boolean) => {
-    setIsSubmitting(true)
-    try {
-      await updateTodo({ data: { id, completed: !completed } })
-      await router.invalidate()
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleToggleComplete = (id: number, completed: boolean) => {
+    updateMutation.mutate({ id, completed: !completed })
   }
 
-  const handleDelete = async (id: number) => {
-    setIsSubmitting(true)
-    try {
-      await deleteTodo({ data: { id } })
-      await router.invalidate()
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(id)
   }
 
   const startEdit = (id: number, title: string) => {
@@ -373,9 +387,9 @@ function TodoListComponent({
   editingId: number | null
   isSubmitting: boolean
   editForm: ReturnType<typeof useForm<TodoFormData>>
-  onToggleComplete: (id: number, completed: boolean) => Promise<void>
-  onUpdate: (id: number, data: TodoFormData) => Promise<void>
-  onDelete: (id: number) => Promise<void>
+  onToggleComplete: (id: number, completed: boolean) => void
+  onUpdate: (id: number, data: TodoFormData) => void
+  onDelete: (id: number) => void
   onStartEdit: (id: number, title: string) => void
   onCancelEdit: () => void
 }) {
