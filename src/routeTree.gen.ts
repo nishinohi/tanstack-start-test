@@ -19,6 +19,7 @@ import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
+import { Route as DemoStartSsrStreamingSsrDbRouteImport } from './routes/demo/start.ssr.streaming-ssr-db'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrNonStreamingSsrDbRouterCacheRouteImport } from './routes/demo/start.ssr.non-streaming-ssr-db-router-cache'
 import { Route as DemoStartSsrNonStreamingSsrDbRouteImport } from './routes/demo/start.ssr.non-streaming-ssr-db'
@@ -76,6 +77,12 @@ const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   path: '/demo/start/ssr/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoStartSsrStreamingSsrDbRoute =
+  DemoStartSsrStreamingSsrDbRouteImport.update({
+    id: '/demo/start/ssr/streaming-ssr-db',
+    path: '/demo/start/ssr/streaming-ssr-db',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DemoStartSsrSpaModeRoute = DemoStartSsrSpaModeRouteImport.update({
   id: '/demo/start/ssr/spa-mode',
   path: '/demo/start/ssr/spa-mode',
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/non-streaming-ssr-db-router-cache': typeof DemoStartSsrNonStreamingSsrDbRouterCacheRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
+  '/demo/start/ssr/streaming-ssr-db': typeof DemoStartSsrStreamingSsrDbRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesByTo {
@@ -144,6 +152,7 @@ export interface FileRoutesByTo {
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/non-streaming-ssr-db-router-cache': typeof DemoStartSsrNonStreamingSsrDbRouterCacheRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
+  '/demo/start/ssr/streaming-ssr-db': typeof DemoStartSsrStreamingSsrDbRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesById {
@@ -163,6 +172,7 @@ export interface FileRoutesById {
   '/demo/start/ssr/non-streaming-ssr-db': typeof DemoStartSsrNonStreamingSsrDbRoute
   '/demo/start/ssr/non-streaming-ssr-db-router-cache': typeof DemoStartSsrNonStreamingSsrDbRouterCacheRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
+  '/demo/start/ssr/streaming-ssr-db': typeof DemoStartSsrStreamingSsrDbRoute
   '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
 }
 export interface FileRouteTypes {
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/non-streaming-ssr-db-router-cache'
     | '/demo/start/ssr/spa-mode'
+    | '/demo/start/ssr/streaming-ssr-db'
     | '/demo/start/ssr'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/non-streaming-ssr-db-router-cache'
     | '/demo/start/ssr/spa-mode'
+    | '/demo/start/ssr/streaming-ssr-db'
     | '/demo/start/ssr'
   id:
     | '__root__'
@@ -219,6 +231,7 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/non-streaming-ssr-db'
     | '/demo/start/ssr/non-streaming-ssr-db-router-cache'
     | '/demo/start/ssr/spa-mode'
+    | '/demo/start/ssr/streaming-ssr-db'
     | '/demo/start/ssr/'
   fileRoutesById: FileRoutesById
 }
@@ -238,6 +251,7 @@ export interface RootRouteChildren {
   DemoStartSsrNonStreamingSsrDbRoute: typeof DemoStartSsrNonStreamingSsrDbRoute
   DemoStartSsrNonStreamingSsrDbRouterCacheRoute: typeof DemoStartSsrNonStreamingSsrDbRouterCacheRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
+  DemoStartSsrStreamingSsrDbRoute: typeof DemoStartSsrStreamingSsrDbRoute
   DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute
 }
 
@@ -313,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoStartSsrIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/start/ssr/streaming-ssr-db': {
+      id: '/demo/start/ssr/streaming-ssr-db'
+      path: '/demo/start/ssr/streaming-ssr-db'
+      fullPath: '/demo/start/ssr/streaming-ssr-db'
+      preLoaderRoute: typeof DemoStartSsrStreamingSsrDbRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/start/ssr/spa-mode': {
       id: '/demo/start/ssr/spa-mode'
       path: '/demo/start/ssr/spa-mode'
@@ -376,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoStartSsrNonStreamingSsrDbRouterCacheRoute:
     DemoStartSsrNonStreamingSsrDbRouterCacheRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
+  DemoStartSsrStreamingSsrDbRoute: DemoStartSsrStreamingSsrDbRoute,
   DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
 }
 export const routeTree = rootRouteImport

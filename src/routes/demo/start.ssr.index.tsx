@@ -53,6 +53,12 @@ function RouteComponent() {
           >
             Non Streaming SSR DB Router Cache
           </Link>
+          <Link
+            to="/demo/start/ssr/streaming-ssr-db"
+            className="transform rounded-lg border-2 border-orange-400 bg-linear-to-r from-orange-500 to-red-500 px-8 py-6 text-center text-2xl font-bold text-white shadow-lg transition-all hover:scale-105 hover:from-orange-600 hover:to-red-600 hover:shadow-orange-500/50"
+          >
+            ⚡ Streaming SSR DB
+          </Link>
         </div>
       </div>
     </div>
