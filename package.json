@@ -95,7 +95,7 @@
     "vite": "^7.3.0",
     "vitest": "^4.0.16",
     "web-vitals": "^5.1.0",
-    "wrangler": "^4.54.0"
+    "wrangler": "^4.59.2"
   },
   "engines": {
     "node": "24.11.x"
