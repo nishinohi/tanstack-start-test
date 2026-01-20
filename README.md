@@ -293,6 +293,112 @@ Once we've created the derived store we can use it in the `App` component just l
 
 You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
 
+# Project Initialization
+
+This section explains how to set up the project for your own Cloudflare environment.
+
+## 1. Configure Cloudflare Resources
+
+Update `wrangler.jsonc` with your own Cloudflare resources:
+
+### D1 Database
+
+Create D1 databases for each environment:
+
+```bash
+# Create databases
+wrangler d1 create tanstack-test           # Production
+wrangler d1 create tanstack-test-develop   # Develop
+wrangler d1 create tanstack-test-staging   # Staging
+```
+
+Update the `database_id` values in `wrangler.jsonc` with the IDs returned from the commands above.
+
+### KV Namespace
+
+Create KV namespaces for session storage:
+
+```bash
+# Create KV namespaces
+wrangler kv namespace create SESSION_KV              # Production
+wrangler kv namespace create SESSION_KV --env develop   # Develop
+wrangler kv namespace create SESSION_KV --env staging   # Staging
+```
+
+Update the `id` values in `kv_namespaces` sections of `wrangler.jsonc`.
+
+### Environment Variables
+
+Update `vars` in `wrangler.jsonc`:
+
+- `BASE_URL`: Your Workers URL (e.g., `https://your-app.your-subdomain.workers.dev`)
+
+## 2. Set Up Local Development Secrets
+
+Copy `.dev.vars.example` to `.dev.vars` and configure:
+
+```bash
+cp .dev.vars.example .dev.vars
+```
+
+```env
+# .dev.vars - Wrangler secrets for local development
+CLIENT_SECRET='Your Google OAuth secret'
+CLIENT_ID='Your Google OAuth Client ID'
+SESSION_SECRET='Random string for session encryption'
+```
+
+## 3. Set Up Environment Variables for Local Server
+
+Copy `.env.local.example` to `.env.local`:
+
+```bash
+cp .env.local.example .env.local
+```
+
+```env
+# .env.local - Environment variables for local development
+D1_LOCAL_URL='./.wrangler/state/v3/d1/miniflare-D1DatabaseObject/your_sql_binary_name.sqlite'
+VITE_BASE_URL=http://localhost:3000
+```
+
+> **Note**: The `D1_LOCAL_URL` path is generated after running `pnpm dev` for the first time. Check `.wrangler/state/v3/d1/miniflare-D1DatabaseObject/` for the actual SQLite file name.
+
+## 4. Set Up Environment Variables for Remote D1 Migration
+
+For running migrations against remote D1 databases, create environment-specific `.env` files:
+
+```bash
+cp .env.example .env.develop   # For develop environment
+cp .env.example .env.staging   # For staging environment
+cp .env.example .env.production # For production environment
+```
+
+```env
+# .env.develop (or .env.staging, .env.production)
+CLOUDFLARE_ACCOUNT_ID='your_cloudflare_account_id'
+D1_ID='your_d1_database_id_for_this_environment'
+CLOUDFLARE_D1_TOKEN='your_cloudflare_api_token_with_d1_read_and_write_permission'
+```
+
+## 5. Run Database Migrations
+
+```bash
+# Local development
+pnpm db:migrate:local
+
+# Remote environments
+pnpm db:migrate:dev      # Develop
+pnpm db:migrate:stg      # Staging
+pnpm db:migrate:prod     # Production
+```
+
+## 6. Start Development Server
+
+```bash
+pnpm dev
+```
+
 # Deployment
 
 This project is configured to deploy to Cloudflare Workers.
@@ -314,6 +420,26 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
    - Or create custom token with: `Workers Scripts:Edit`, `Workers Routes:Edit`
 
 2. **CLOUDFLARE_ACCOUNT_ID**: Find at Cloudflare Dashboard → Workers & Pages → Overview
+
+### Required GitHub Environments
+
+Create the following environments in your GitHub repository (Settings → Environments):
+
+1. **production** - For main branch deployments
+2. **staging** - For staging branch deployments
+3. **develop** - For develop branch deployments
+
+For each environment, add the following variable (Environment variables, not secrets):
+
+| Variable        | Description                           | Example                                       |
+| --------------- | ------------------------------------- | --------------------------------------------- |
+| `VITE_BASE_URL` | Base URL for the deployed application | `https://your-app.your-subdomain.workers.dev` |
+
+Example values:
+
+- **production**: `https://tanstack-start-app.your-subdomain.workers.dev`
+- **staging**: `https://tanstack-start-app-staging.your-subdomain.workers.dev`
+- **develop**: `https://tanstack-start-app-develop.your-subdomain.workers.dev`
 
 ## Manual Deployment
 
