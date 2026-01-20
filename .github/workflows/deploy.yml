@@ -11,7 +11,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy to Cloudflare Workers
-    environment: ${{ github.ref == 'refs/heads/staging' && 'staging' || (github.ref == 'refs/heads/develop' && 'develop' || null) }}
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || (github.ref == 'refs/heads/staging' && 'staging' || 'develop') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
